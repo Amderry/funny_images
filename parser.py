@@ -34,6 +34,5 @@ def send_image(image_path):
   chat_id = os.getenv("CHAT_ID")
   bot_token = os.getenv("BOT_TOKEN")
   url = f'https://api.telegram.org/bot{bot_token}/sendPhoto?chat_id={chat_id}'
-  print(url)
   with open('funny_image_edited.png', 'rb') as image:
     print(requests.post(url, files={'photo': image}))
