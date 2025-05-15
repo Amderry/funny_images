@@ -20,11 +20,10 @@ def get_random_image():
   with open('funny_image.jpg', 'wb') as image:
     try:
       raw_image = requests.get(image_url, stream=True, timeout=2).raw
-    except Exception as e:
-      print(e)
-    if raw_image != None:
       shutil.copyfileobj(raw_image, image)
-
+    except Exception as e:
+      print("Exception occured: ", e)
+      
 def get_random_text():
   random_response = requests.get(base_url + random_path, timeout=2).text
   random_data = BeautifulSoup(random_response, 'html.parser')
