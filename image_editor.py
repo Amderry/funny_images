@@ -15,7 +15,7 @@ def edit_image():
 
   I1 = ImageDraw.Draw(img)
 
-  impact = ImageFont.truetype('Impact.TTF', 80)
+  impact = ImageFont.truetype('Impact.ttf', 80)
 
   I1.text((750, 50), top_header, font=impact, fill='white', stroke_width=2, stroke_fill='black', anchor='mm')
   I1.text((750, 950), bottom_header, font=impact, fill='white', stroke_width=2, stroke_fill='black', anchor='mm')
