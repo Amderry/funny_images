@@ -1,0 +1,54 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  funny_images 
+
+  Sample SAM Template for funny_images
+
+Globals:
+  Function:
+    Timeout: 3
+
+    LoggingConfig:
+      LogFormat: JSON
+
+Parameters:
+  TelegramBotToken:
+    Type: String
+    Description: Your Telegram Bot API Token
+    NoEcho: true
+  ChatId:
+    Type: String
+    Description: Id of a chat
+    NoEcho: true
+
+Resources:
+  FunnyImages:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: app/
+      Handler: main.lambda_handler
+      Runtime: python3.13
+      Layers: 
+      - !Ref LibLayer
+      Architectures:
+      - arm64 
+      Environment:
+        Variables:
+          BOT_TOKEN: !Ref TelegramBotToken 
+          CHAT_ID: !Ref ChatId
+          FONTPATH: "/opt/fonts/"
+      Events:
+        Schedule:
+          Type: ScheduleV2
+          Properties:
+            ScheduleExpression: rate(5 minutes)
+            FlexibleTimeWindow:
+              MaximumWindowInMinutes: 5
+              Mode: FLEXIBLE
+
+  LibLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      ContentUri: layer_content.zip 
+      Description: Runtime libraries
