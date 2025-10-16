@@ -19,8 +19,8 @@ def edit_image(image: BytesIO, text: list) -> BytesIO:
   fontpath = f'{getenv("FONTPATH", "/usr/share/fonts/TTF/")}Impact.TTF'
   impact = []
 
-  font_size = int(height * 0.35)
   for i in range(0,2):
+    font_size = int(height * 0.35)
     impact.append(ImageFont.truetype(fontpath, font_size))
     bbox = I1.textbbox((0, 0), text[i], font=impact[i])
     text_width = bbox[2] - bbox[0]
