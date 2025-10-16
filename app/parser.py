@@ -1,4 +1,5 @@
 import requests
+from curl_cffi import requests as cc_requests
 from io import BytesIO
 from random import randrange
 from bs4 import BeautifulSoup
@@ -19,7 +20,7 @@ headers = {
 
 def get_random_image_url() -> str:
   try:
-    random_response = requests.get(base_url + random_path, timeout=2, allow_redirects=True, headers=headers)
+    random_response = cc_requests.get(base_url + random_path, timeout=2, allow_redirects=True, headers=headers, impersonate="chrome")
     random_response.raise_for_status()
     random_data = BeautifulSoup(random_response.text, 'html.parser')
 
@@ -29,7 +30,7 @@ def get_random_image_url() -> str:
 
     random_image_path = random_images[randrange(0, len(random_images))].find('a')['href']
 
-    image_response = requests.get(base_url + random_image_path, timeout=2, headers=headers)
+    image_response = cc_requests.get(base_url + random_image_path, timeout=2, headers=headers, impersonate="chrome")
     image_response.raise_for_status()
 
     image_data = BeautifulSoup(image_response.text, 'html.parser')
@@ -62,7 +63,7 @@ def get_random_text():
     random_text_list = []
     for i in range(2):
       if randrange(0, 100) > 2:
-        random_response = requests.get(base_url + random_path, timeout=2, headers=headers)
+        random_response = cc_requests.get(base_url + random_path, timeout=2, headers=headers, impersonate="chrome")
         random_response.raise_for_status() 
 
         random_data = BeautifulSoup(random_response.text, 'html.parser')
