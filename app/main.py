@@ -19,15 +19,15 @@ if __name__ == "__main__":
 
 def lambda_handler(event, context):
   try:
-      text = get_random_text()
-      logger.info(text)
-      image = download_image()
-      resulting_image = edit_image(image, text)
-      logger.info(resulting_image)
-      send_image(resulting_image)    
+    text = get_random_text()
+    logger.info(text)
+    image = download_image()
+    resulting_image = edit_image(image, text)
+    logger.info(resulting_image)
+    send_image(resulting_image)    
 
-      return {"message": "Success"}
+    return {"message": "Success"}
 
-    except Exception as e:
-      logger.error(f"An exception was thrown {e}", exc_info=True)
-      raise e
+  except Exception as e:
+    logger.error(f"An exception was thrown {e}", exc_info=True)
+    raise e
