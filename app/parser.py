@@ -50,6 +50,7 @@ def get_random_image_url() -> str:
 )
 def download_image() -> BytesIO:
   url = get_random_image_url()
+  logger.info(url)
   raw_image_response = requests.get(url, stream=True, timeout=3, headers=headers)
   raw_image_response.raise_for_status()
 
