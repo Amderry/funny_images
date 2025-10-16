@@ -1,24 +1,46 @@
 from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
-from parser import get_random_image
-from parser import get_random_text
-from parser import send_image
+from io import BytesIO
+from logger import logger
+from os import getenv 
 
-def edit_image():
-  get_random_image()
-  top_header = get_random_text()
-  bottom_header = get_random_text()
-
-  img = Image.open('funny_image.jpg')
-  img = img.resize((1500,1000))
+def edit_image(image: BytesIO, text: list) -> BytesIO:
+  try:
+    img = Image.open(image)
+  except Exception as e:
+    logger.error(f"An exception was thrown {e}")
 
   I1 = ImageDraw.Draw(img)
 
-  impact = ImageFont.truetype('Impact.ttf', 80)
+  width, height = img.size
+  target_width = width * 0.9
 
-  I1.text((750, 50), top_header, font=impact, fill='white', stroke_width=2, stroke_fill='black', anchor='mm')
-  I1.text((750, 950), bottom_header, font=impact, fill='white', stroke_width=2, stroke_fill='black', anchor='mm')
+  fontpath = f'{getenv("FONTPATH", "/usr/share/fonts/TTF/")}Impact.TTF'
+  impact = []
 
-  img.save("funny_image_edited.png")
-  send_image("funny_image_edited.png")
+  font_size = int(height * 0.35)
+  for i in range(0,2):
+    impact.append(ImageFont.truetype(fontpath, font_size))
+    bbox = I1.textbbox((0, 0), text[i], font=impact[i])
+    text_width = bbox[2] - bbox[0]
+    counter = 0
+
+    while text_width > target_width and font_size > 1 and counter < 1000:
+        font_size -= 1
+        impact[i] = ImageFont.truetype(fontpath, font_size)
+        bbox = I1.textbbox((0, 0), text[i], font=impact[i])
+        text_width = bbox[2] - bbox[0]
+        counter += 1
+
+        if font_size == 1:
+          logger.info("Unable to minimize text enough")
+
+  I1.text((width * 0.5, height * 0.1), text[0], font=impact[0], fill='white', stroke_width=3, stroke_fill='black', anchor='mm')
+  I1.text((width * 0.5, height * 0.9), text[1], font=impact[1], fill='white', stroke_width=3, stroke_fill='black', anchor='mm')
+
+  resulting_image = BytesIO()
+  img.save(resulting_image, format="PNG")
+
+  resulting_image.seek(0)
+  return resulting_image
