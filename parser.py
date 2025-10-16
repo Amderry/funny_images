@@ -1,15 +1,15 @@
 import requests
-import logging
 from io import BytesIO
 from random import randrange
 from bs4 import BeautifulSoup
+from logger import logger
+from texts import texts
+from tenacity import retry, stop_after_attempt, retry_if_exception_type, wait_none
 import os
 
 base_url = "https://kasheloff.ru"
 random_path = "/random"
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger()
 headers = {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
       'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
@@ -17,7 +17,7 @@ headers = {
       'Connection': 'keep-alive'
 }
 
-def get_random_image():
+def get_random_image_url() -> str:
   try:
     random_response = requests.get(base_url + random_path, timeout=2, allow_redirects=True, headers=headers)
     random_response.raise_for_status()
@@ -34,13 +34,8 @@ def get_random_image():
 
     image_data = BeautifulSoup(image_response.text, 'html.parser')
     image_url = image_data.find('picture').find('img')['src']
-
-    raw_image_response = requests.get(image_url, stream=True, timeout=10, headers=headers)
-    raw_image_response.raise_for_status()
-
-    image_bytes = BytesIO(raw_image_response.content)
-    return image_bytes
-
+    return image_url
+    
   except requests.exceptions.RequestException as e:
     logger.error(f"An HTTP exception was thrown: {e}")
     return None
@@ -48,16 +43,32 @@ def get_random_image():
     logger.error(f"An exception was thrown: {e}")
     return None
       
+@retry(
+    stop=stop_after_attempt(10), 
+    wait=wait_none(),
+    reraise=True 
+)
+def download_image() -> BytesIO:
+  url = get_random_image_url()
+  raw_image_response = requests.get(url, stream=True, timeout=3, headers=headers)
+  raw_image_response.raise_for_status()
+
+  image_bytes = BytesIO(raw_image_response.content)
+  return image_bytes
+
 def get_random_text():
   try:
     random_text_list = []
     for i in range(2):
-      random_response = requests.get(base_url + random_path, timeout=2, headers=headers)
-      random_response.raise_for_status() 
+      if randrange(0, 100) > 2:
+        random_response = requests.get(base_url + random_path, timeout=2, headers=headers)
+        random_response.raise_for_status() 
 
-      random_data = BeautifulSoup(random_response.text, 'html.parser')
-      random_text = random_data.find('div', class_='post-title').find('h1').text
-      random_text_list.append(random_text)
+        random_data = BeautifulSoup(random_response.text, 'html.parser')
+        random_text = random_data.find('div', class_='post-title').find('h1').text
+        random_text_list.append(random_text)
+      else:
+        random_text_list.append(texts[randrange(0, len(texts))])
 
     return random_text_list
 
@@ -67,14 +78,3 @@ def get_random_text():
   except Exception as e:
     logger.error(f"An exception was thrown: {e}")
     return None
-
-def send_image(image_path):
-  chat_id = os.getenv("CHAT_ID")
-  bot_token = os.getenv("BOT_TOKEN")
-  url = f'https://api.telegram.org/bot{bot_token}/sendPhoto?chat_id={chat_id}'
-  with open('funny_image_edited.png', 'rb') as image:
-    print(requests.post(url, files={'photo': image}))
-
-if __name__ == "__main__":
-  logger.info(get_random_image())
-  logger.info(get_random_text())
